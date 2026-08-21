@@ -1,0 +1,94 @@
+@baseUrl =https://localhost:5106
+@token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImViNjI5NDczLWZlZmYtNDg2MC1iMTllLTRiM2YwOTQ0NWQ1ZCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6Imp1bmlvckAyMDI5LmNvbSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJKdW5pb3IiLCJleHAiOjE3ODY4NjI3NjQsImlzcyI6ImZsb3d0cmFjay5BUEkiLCJhdWQiOiJmbG93dHJhY2suQ2xpZW50In0.4iO7127XO43Xjjo7PUonu-Tqgb_UMfi5eCJjp4V2Lbg
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Junior",
+  "email": "junior@2029.com",
+  "password": "1234567"
+}
+
+### ->
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "junior@2029.com",
+  "password": "1234567"
+}
+###
+
+### 2. Crear categoría
+POST {{baseUrl}}/api/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Gasto personal2028"
+
+}
+
+### -> copia el "id" de la categoría creada
+
+### 3. Crear método de pago
+POST {{baseUrl}}/api/paymentmethod
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Efectivo20292"
+}
+
+### -> copia el "id" del método de pago
+
+### 4. Crear presupuesto (con el id de categoría del paso 2)
+POST {{baseUrl}}/api/budgets
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "categoryId": "09bffbba-3f63-4a90-9a58-17043a63daba",
+  "amount": 5000,
+  "month": 8,
+  "year": 2026
+}
+
+### 5. Crear gasto (con ids de categoría y método de pago)
+POST {{baseUrl}}/api/expenses
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "amount": 3600,
+  "date": "2026-08-15",
+  "description": "Supermercado2",
+  "categoryId": "f52e9b0f-4aa6-4dfc-af8c-f9519516410e",
+  "paymentMethodId": "25ad10f6-0bd5-4ad6-976b-89da72a161d9"
+}
+
+### 6. Ver el status del presupuesto — aquí verificas que las alertas funcionen
+GET {{baseUrl}}/api/budgets/status?month=8&year=2026
+Authorization: Bearer {{token}}
+
+### 7. Listar todos los gastos
+GET {{baseUrl}}/api/expenses
+Authorization: Bearer {{token}}
+
+
+### 7. Listar todas las categorias
+GET {{baseUrl}}/api/categories
+Authorization: Bearer {{token}}
+
+### 7. Listar todos los metodos de pagos
+GET {{baseUrl}}/api/paymentmethod
+Authorization: Bearer {{token}}
+
+
+
+
+### 5. 
+Delete {{baseUrl}}/api/categories/c8bd53c5-b498-4814-bfe9-4c7ae5580f86
+Authorization: Bearer {{token}}
+
+

@@ -1,0 +1,49 @@
+# ==================================
+# .NET / C# / Visual Studio
+# ==================================
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio cache/options directory
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Archivos de configuracion local que no deben compartirse (Seguridad)
+appsettings.Development.json
+appsettings.Local.json
+
+## Mac / VS Code
+.DS_Store
+.vscode/
+
+
+# .NET Backend
+Flowtrack/**/bin/
+Flowtrack/**/obj/
+Flowtrack/**/.vs/
+*.user
+
+# Next.js Frontend
+flowtrack-frontend/node_modules/
+flowtrack-frontend/.next/
+flowtrack-frontend/.env.local
+flowtrack-frontend/out/
+
+# General
+.DS_Store
+*.log
