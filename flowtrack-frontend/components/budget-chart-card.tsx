@@ -6,42 +6,32 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChartContainer, ChartConfig } from "@/components/ui/chart";
-import { BudgetStatusDto } from "@/types/budget";
+import { BudgetStatusDto, BudgetUpdateDto, getAlertLevel } from "@/types/budget";
 import { ExpenseResponseDto } from "@/types/expense";
+import { EditBudgetDialog } from "@/components/edit-budget-dialog";
 
 interface BudgetChartCardProps {
   status: BudgetStatusDto;
   expenses: ExpenseResponseDto[];
   onDelete: (id: string) => void;
+  onUpdate: (id: string, dto: BudgetUpdateDto) => Promise<unknown>;
 }
 
-const alertColors: Record<string, string> = {
-  Normal: "var(--chart-1)",
-  Warning50: "var(--chart-2)",
-  Warning80: "var(--chart-4)",
-  Exceeded: "var(--destructive)",
-};
-
-const alertLabels: Record<string, string> = {
-  Normal: "En regla",
-  Warning50: "50% usado",
-  Warning80: "80% usado",
-  Exceeded: "Excedido",
-};
-
-export function BudgetChartCard({ status, expenses, onDelete }: BudgetChartCardProps) {
+export function BudgetChartCard({ status, expenses, onDelete, onUpdate }: BudgetChartCardProps) {
   const percentage = Math.min(status.percentageUsed, 100);
-  const color = alertColors[status.alertLevel] ?? "var(--chart-1)";
+  const alert = getAlertLevel(status.alertLevel);
 
-  const chartData = [{ name: "usado", value: percentage, fill: color }];
+  const chartData = [{ name: "usado", value: percentage, fill: alert.color }];
   const chartConfig: ChartConfig = {
     value: { label: "Usado" },
   };
 
-  // Métodos de pago más usados para esta categoría en este mes/año
-  const relatedExpenses = expenses.filter(
-    (e) => e.categoryId === status.categoryId
-  );
+  // Solo gastos de la categoría y del mismo mes/año del presupuesto.
+  const relatedExpenses = expenses.filter((e) => {
+    if (e.categoryId !== status.categoryId) return false;
+    const date = new Date(e.date);
+    return date.getMonth() + 1 === status.month && date.getFullYear() === status.year;
+  });
 
   const paymentUsage = relatedExpenses.reduce<Record<string, number>>((acc, e) => {
     acc[e.paymentMethodName] = (acc[e.paymentMethodName] ?? 0) + e.amount;
@@ -64,11 +54,12 @@ export function BudgetChartCard({ status, expenses, onDelete }: BudgetChartCardP
           </p>
         </div>
         <div className="flex items-center gap-1">
-          <Badge
-            variant={status.alertLevel === "Exceeded" ? "destructive" : "secondary"}
-          >
-            {alertLabels[status.alertLevel]}
-          </Badge>
+          <Badge variant={alert.variant}>{alert.label}</Badge>
+          <EditBudgetDialog
+            budgetId={status.id}
+            currentAmount={status.budgetAmount}
+            onUpdate={onUpdate}
+          />
           <Button variant="ghost" size="icon-sm" onClick={() => onDelete(status.id)}>
             <Trash2 className="text-destructive" />
           </Button>
@@ -86,7 +77,7 @@ export function BudgetChartCard({ status, expenses, onDelete }: BudgetChartCardP
             outerRadius={60}
           >
             <PolarGrid gridType="circle" radialLines={false} stroke="none" />
-            <RadialBar dataKey="value" background cornerRadius={10} fill={color} />
+            <RadialBar dataKey="value" background cornerRadius={10} fill={alert.color} />
             <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
               <RechartsLabel
                 content={({ viewBox }) => {
