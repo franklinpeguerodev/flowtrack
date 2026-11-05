@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/authContext";
 import { AppSidebar } from "@/components/app-sidebar";
 import {
@@ -18,8 +18,15 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
-import { Search } from "lucide-react";
+
+const PAGE_TITLES: Record<string, string> = {
+  "/dashboard": "Categorías",
+  "/dashboard/expenses": "Gastos",
+  "/dashboard/budgets": "Presupuestos",
+  "/dashboard/payment-methods": "Métodos de pago",
+  "/dashboard/reports": "Reportes",
+  "/dashboard/files/import": "Archivos",
+};
 
 function subscribe() {
   return () => {};
@@ -40,6 +47,7 @@ export default function DashboardLayout({
 }) {
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const mounted = useMounted();
 
   useEffect(() => {
@@ -51,6 +59,8 @@ export default function DashboardLayout({
   if (!mounted || !isAuthenticated || !user) {
     return null;
   }
+
+  const pageTitle = PAGE_TITLES[pathname] ?? "Flowtrack";
 
   return (
     <SidebarProvider>
@@ -67,17 +77,10 @@ export default function DashboardLayout({
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Categorías</BreadcrumbPage>
+                <BreadcrumbPage>{pageTitle}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-
-          <div className="ml-auto w-64">
-            <InputGroup>
-              <Search className="size-4 text-muted-foreground" />
-              <InputGroupInput placeholder="Buscar..." />
-            </InputGroup>
-          </div>
         </header>
 
         <main className="flex-1 p-6">{children}</main>

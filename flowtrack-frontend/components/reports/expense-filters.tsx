@@ -41,6 +41,13 @@ export function ExpenseFilters({ filters, onChange, categories, paymentMethods }
 
   const hasActiveFilters = filters.from || filters.to || filters.categoryId || filters.paymentMethodId;
 
+  // Base UI no resuelve la etiqueta de SelectValue si el item nunca se montó
+  // (el valor se fija por estado), y termina mostrando el id. Se resuelve aquí.
+  const selectedCategory = categories.find((c) => c.id === filters.categoryId);
+  const selectedPaymentMethod = paymentMethods.find(
+    (p) => p.id === filters.paymentMethodId
+  );
+
   return (
     <div className="flex flex-wrap items-end gap-3">
       <div className="space-y-1.5">
@@ -72,7 +79,9 @@ export function ExpenseFilters({ filters, onChange, categories, paymentMethods }
           onValueChange={(val) => update({ categoryId: val === ALL ? "" : val ?? "" })}
         >
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="Todas" />
+            <SelectValue placeholder="Todas las categorías">
+              {selectedCategory?.name ?? "Todas las categorías"}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ALL}>Todas las categorías</SelectItem>
@@ -90,7 +99,9 @@ export function ExpenseFilters({ filters, onChange, categories, paymentMethods }
           onValueChange={(val) => update({ paymentMethodId: val === ALL ? "" : val ?? "" })}
         >
           <SelectTrigger className="w-44">
-            <SelectValue placeholder="Todos" />
+            <SelectValue placeholder="Todos los métodos">
+              {selectedPaymentMethod?.name ?? "Todos los métodos"}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ALL}>Todos los métodos</SelectItem>
