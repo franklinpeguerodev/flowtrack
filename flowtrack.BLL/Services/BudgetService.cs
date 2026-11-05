@@ -21,8 +21,10 @@ public class BudgetService : IBudgetService
     public async Task<BudgetResponseDto> CreateAsync(Guid userId, BudgetCreateDto dto)
     {
         PeriodValidator.Validate(dto.Month, dto.Year);
+        if (dto.Amount <= 0)
+        throw new BusinessRuleException("El monto debe ser positivo.");
         if (await _categoryRepository.GetByIdAndUserAsync(dto.CategoryId,userId) is null)
-        throw new ResourceNotFoundException("La categoria no existe.");
+        throw new ResourceNotFoundException("La categoría no existe.");
         if( await _budgetRepository.IsDuplicateBudget(userId,dto.CategoryId,dto.Month,dto.Year) is not null)
         throw new DuplicateResourceException("Ya tienes un presupuesto con las mismas propiedades.");
         var budget = new Budget
@@ -54,6 +56,8 @@ public class BudgetService : IBudgetService
     public async Task<BudgetResponseDto> UpdateAsync(Guid userId, Guid budgetId, BudgetUpdateDto dto)
     {
         var budget = await GetOwnedBudgetOrThrow(userId,budgetId);
+        if (dto.Amount <= 0)
+        throw new BusinessRuleException("El monto debe ser positivo.");
         budget.Amount = dto.Amount;
         await _budgetRepository.UpdateAsync(budget);
         await _budgetRepository.SaveChangesAsync();

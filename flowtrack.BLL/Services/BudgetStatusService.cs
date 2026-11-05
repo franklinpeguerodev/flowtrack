@@ -76,7 +76,10 @@ public class BudgetStatusService : IBudgetStatusService
 
     private static BudgetAlertLevel GetAlertLevel(decimal percentage) => percentage switch
     {
-        >= Threshold100 => BudgetAlertLevel.Exceeded,
+        // Solo se considera excedido cuando el gasto SUPERA el presupuesto.
+        // Con gasto == presupuesto (100%) el presupuesto está al límite, no excedido.
+        > Threshold100 => BudgetAlertLevel.Exceeded,
+        >= Threshold100 => BudgetAlertLevel.Warning100,
         >= Threshold80 => BudgetAlertLevel.Warning80,
         >= Threshold50 => BudgetAlertLevel.Warning50,
         _ => BudgetAlertLevel.Normal
