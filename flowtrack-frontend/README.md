@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Flowtrack — Frontend
 
-## Getting Started
+Cliente web de Flowtrack, construido con **Next.js 16 (App Router)**, **React 19**,
+**TypeScript**, **Tailwind CSS 4**, **Base UI/shadcn** y **Recharts**.
 
-First, run the development server:
+La documentación general del proyecto (arquitectura, API, reglas de negocio) está en el
+[README principal](../README.md).
+
+## Requisitos
+
+- Node.js 20+
+- La API de Flowtrack en ejecución (por defecto `http://localhost:5106`)
+
+## Configuración
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`.env.local`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5106
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+```bash
+npm run dev      # desarrollo en http://localhost:3000
+npm run build    # build de producción
+npm run start    # servir el build
+npm run lint     # ESLint
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Estructura
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+app/                Rutas (App Router): login, register, dashboard/*
+components/         UI (ui/) y componentes de dominio
+  reports/          Tarjetas y gráficos de reportes
+context/            AuthProvider: sesión, token y perfil
+hooks/              Acceso a la API por recurso
+lib/                apiFetch, manejo de errores, utilidades de auth y reportes
+types/              Tipos del contrato del backend
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Notas
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- El token JWT se guarda en `localStorage`; el perfil se conserva aparte para sobrevivir recargas.
+- Un `401` limpia la sesión y redirige a `/login`.
+- La URL de la API se toma de `NEXT_PUBLIC_API_URL`.
+- Los formularios de captura ofrecen solo categorías y métodos de pago activos.
