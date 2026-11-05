@@ -21,6 +21,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsFixedLength()
             .IsRequired();
 
+        builder.Property(u=> u.TokenVersion)
+            .HasDefaultValue(0)
+            .IsRequired();
+
         builder.Property (u=> u.CreatedAt)
             .IsRequired();
     }

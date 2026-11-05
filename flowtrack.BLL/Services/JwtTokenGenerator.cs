@@ -21,7 +21,9 @@ public class JwtTokenGenerator : ITokenGenerator
         {
             new Claim (ClaimTypes.NameIdentifier,user.Id.ToString()),
             new Claim (ClaimTypes.Email,user.Email),
-            new Claim(ClaimTypes.Name,user.Name)
+            new Claim(ClaimTypes.Name,user.Name),
+            // Permite revocar los tokens anteriores cuando el usuario cierra sesión.
+            new Claim("token_version", user.TokenVersion.ToString())
         };
     
         var key = new SymmetricSecurityKey(
