@@ -16,7 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { useAuth } from "@/context/authContext";
-import { ApiException } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api";
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -29,33 +29,27 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
 
   const [nameLoading, setNameLoading] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
-  const [nameFieldErrors, setNameFieldErrors] = useState<Record<string, string[]>>({});
 
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordFieldErrors, setPasswordFieldErrors] = useState<Record<string, string[]>>({});
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   if (!user) return null;
 
   async function handleNameSubmit(formData: FormData) {
     setNameError(null);
-    setNameFieldErrors({});
     setNameLoading(true);
 
-    const newName = formData.get("name") as string;
+    const newName = (formData.get("name") as string).trim();
 
     try {
       await updateName({ name: newName });
+      // El backend no emite un token nuevo al actualizar el nombre: el valor
+      // mostrado sale del estado local y se persiste para sobrevivir a la recarga.
       updateUser({ name: newName });
       onOpenChange(false);
     } catch (err) {
-      if (err instanceof ApiException) {
-        if (err.error.errors) setNameFieldErrors(err.error.errors);
-        else setNameError(err.error.message);
-      } else {
-        setNameError("No se pudo actualizar el nombre.");
-      }
+      setNameError(getErrorMessage(err, "No se pudo actualizar el nombre."));
     } finally {
       setNameLoading(false);
     }
@@ -63,7 +57,6 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
 
   async function handlePasswordSubmit(formData: FormData) {
     setPasswordError(null);
-    setPasswordFieldErrors({});
     setPasswordSuccess(false);
     setPasswordLoading(true);
 
@@ -74,12 +67,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
       });
       setPasswordSuccess(true);
     } catch (err) {
-      if (err instanceof ApiException) {
-        if (err.error.errors) setPasswordFieldErrors(err.error.errors);
-        else setPasswordError(err.error.message);
-      } else {
-        setPasswordError("No se pudo cambiar la contraseña.");
-      }
+      setPasswordError(getErrorMessage(err, "No se pudo cambiar la contraseña."));
     } finally {
       setPasswordLoading(false);
     }
@@ -110,9 +98,11 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
               <div className="space-y-1.5">
                 <Label htmlFor="name">Nombre</Label>
                 <Input key={user.name} id="name" name="name" defaultValue={user.name} required />
-                {nameFieldErrors.Name?.map((msg, i) => (
-                  <p key={i} className="text-sm text-destructive">{msg}</p>
-                ))}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Email</Label>
+                <Input value={user.email} readOnly disabled />
               </div>
 
               <Button type="submit" disabled={nameLoading} className="w-full">
@@ -139,17 +129,11 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
               <div className="space-y-1.5">
                 <Label htmlFor="currentPassword">Contraseña actual</Label>
                 <Input id="currentPassword" name="currentPassword" type="password" required />
-                {passwordFieldErrors.CurrentPassword?.map((msg, i) => (
-                  <p key={i} className="text-sm text-destructive">{msg}</p>
-                ))}
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="newPassword">Nueva contraseña</Label>
                 <Input id="newPassword" name="newPassword" type="password" required />
-                {passwordFieldErrors.NewPassword?.map((msg, i) => (
-                  <p key={i} className="text-sm text-destructive">{msg}</p>
-                ))}
               </div>
 
               <Button type="submit" disabled={passwordLoading} className="w-full">

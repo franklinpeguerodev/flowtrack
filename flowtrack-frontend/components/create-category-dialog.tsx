@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ApiException } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api";
 import { CategoryCreateDto } from "@/types/category";
 
 interface CreateCategoryDialogProps {
@@ -35,11 +35,7 @@ export function CreateCategoryDialog({ onCreate }: CreateCategoryDialogProps) {
       await onCreate({ name: formData.get("name") as string });
       setOpen(false);
     } catch (err) {
-      if (err instanceof ApiException) {
-        setError(err.error.message);
-      } else {
-        setError("No se pudo crear la categoría.");
-      }
+      setError(getErrorMessage(err, "No se pudo crear la categoría."));
     } finally {
       setIsLoading(false);
     }

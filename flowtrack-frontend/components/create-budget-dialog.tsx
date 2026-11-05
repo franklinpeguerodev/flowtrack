@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ApiException } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api";
 import { BudgetCreateDto } from "@/types/budget";
 import { useCategories } from "@/hooks/use-categories";
 
@@ -43,7 +43,8 @@ export function CreateBudgetDialog({ onCreate }: CreateBudgetDialogProps) {
 
   const now = new Date();
   const { categories = [] } = useCategories();
-  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const activeCategories = categories.filter((c) => c.isActive);
+  const selectedCategory = activeCategories.find((c) => c.id === categoryId);
 
   async function handleSubmit(formData: FormData) {
     setError(null);
@@ -64,7 +65,7 @@ export function CreateBudgetDialog({ onCreate }: CreateBudgetDialogProps) {
       setOpen(false);
       setCategoryId("");
     } catch (err) {
-      setError(err instanceof ApiException ? err.error.message : "No se pudo crear el presupuesto.");
+      setError(getErrorMessage(err, "No se pudo crear el presupuesto."));
     } finally {
       setIsLoading(false);
     }
@@ -97,9 +98,15 @@ export function CreateBudgetDialog({ onCreate }: CreateBudgetDialogProps) {
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
+                {activeCategories.length === 0 ? (
+                  <SelectItem value="no-categories" disabled>
+                    No hay categorías activas
+                  </SelectItem>
+                ) : (
+                  activeCategories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -126,7 +133,15 @@ export function CreateBudgetDialog({ onCreate }: CreateBudgetDialogProps) {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="year">Año</Label>
-              <Input id="year" name="year" type="number" defaultValue={now.getFullYear()} required />
+              <Input
+                id="year"
+                name="year"
+                type="number"
+                min={2000}
+                max={2100}
+                defaultValue={now.getFullYear()}
+                required
+              />
             </div>
           </div>
 

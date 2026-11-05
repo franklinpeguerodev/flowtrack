@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ApiException } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api";
 import { PaymentMethodCreateDto } from "@/types/paymentMethod";
 
 interface CreatePaymentMethodDialogProps {
@@ -35,7 +35,7 @@ export function CreatePaymentMethodDialog({ onCreate }: CreatePaymentMethodDialo
       await onCreate({ name: formData.get("name") as string });
       setOpen(false);
     } catch (err) {
-      setError(err instanceof ApiException ? err.error.message : "No se pudo crear el método de pago.");
+      setError(getErrorMessage(err, "No se pudo crear el método de pago."));
     } finally {
       setIsLoading(false);
     }

@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ApiException } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api";
 import { CategoryResponseDto, CategoryUpdateDto } from "@/types/category";
 
 interface EditCategoryDialogProps {
@@ -41,11 +41,7 @@ export function EditCategoryDialog({ category, onUpdate }: EditCategoryDialogPro
       });
       setOpen(false);
     } catch (err) {
-      setError(
-        err instanceof ApiException 
-          ? err.error.message 
-          : "No se pudo actualizar la categoría."
-      );
+      setError(getErrorMessage(err, "No se pudo actualizar la categoría."));
     } finally {
       setIsLoading(false);
     }
