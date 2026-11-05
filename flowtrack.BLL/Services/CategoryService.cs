@@ -23,7 +23,7 @@ public class CategoryService : ICategoryService
     public async Task<CategoryResponseDto> CreateAsync(Guid userId, CategoryCreateDto dto)
     {
         if (await _categoryRepository.IsDuplicateNameAsync(userId, dto.Name) is not null)
-            throw new DuplicateResourceException($"El nombre de la categoria ya existe: {dto.Name}");
+            throw new DuplicateResourceException($"El nombre de la categoría ya existe: {dto.Name}");
 
         var category = new Category
         {
@@ -55,6 +55,12 @@ public class CategoryService : ICategoryService
     {
         var category = await GetOwnedCategoryOrThrow(userId, categoryId);
 
+        // El nombre debe seguir siendo único entre las categorías del usuario.
+        // Se excluye la propia categoría para no bloquear la edición de su nombre.
+        var duplicated = await _categoryRepository.IsDuplicateNameAsync(userId, dto.Name, categoryId);
+        if (duplicated is not null)
+            throw new DuplicateResourceException($"El nombre de la categoría ya existe: {dto.Name}");
+
         category.Name = dto.Name;
         category.IsActive = dto.IsActive;
 
@@ -71,7 +77,7 @@ public class CategoryService : ICategoryService
         var hasExpenses = await _categoryRepository.ExpenseExistingAsync(categoryId);
         if (hasExpenses)
             throw new ForbiddenOperationException("No se puede eliminar: la categoría tiene gastos asociados");
-        var relatedBudgets= await _budgetRepository.GetCategoryAsync(categoryId);
+        var relatedBudgets= await _budgetRepository.GetCategoryAsync(categoryId, userId);
         foreach (var budget in relatedBudgets)
         {
             await _budgetRepository.DeleteAsync(budget);
