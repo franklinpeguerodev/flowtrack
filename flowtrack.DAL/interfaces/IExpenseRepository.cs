@@ -8,4 +8,5 @@ public interface IExpenseRepository : IRepository<Expense>
     Task<IEnumerable<Expense>> GetExpenseByPeriodAsync (Guid userId,int month , int year);
     Task<IEnumerable<Expense>> GetAllByUserWithDetailsAsync(Guid userId);
      Task<IEnumerable<Expense>> GetByCategoryAndPeriodAsync(Guid userId, Guid categoryId, int month, int year);
+    Task<bool> PaymentMethodExpenseExistingAsync(Guid paymentMethodId);
 }
