@@ -21,10 +21,34 @@ public class ExpenseImportService : IExpenseImportService
     }
     public async Task<ExpenseImportResultDto> ImportAsync(Guid userId, IFormFile file)
     {
+        if (file is null || file.Length == 0)
+            throw new BusinessRuleException("El archivo está vacío.");
+
+        if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            throw new BusinessRuleException("El archivo debe ser un Excel con extensión .xlsx.");
+
         using var stream= file.OpenReadStream();
-        using var workBook = new XLWorkbook(stream);
+        XLWorkbook workbook;
+        try
+        {
+            workbook = new XLWorkbook(stream);
+        }
+        catch (Exception ex)
+        {
+            // Sin esta validación un archivo no válido devolvía 500 en vez de un 400 entendible.
+            throw new BusinessRuleException($"El archivo no es un Excel válido (.xlsx). Detalle: {ex.Message}");
+        }
+        using var workBook = workbook;
+
+        if (!workBook.Worksheets.Any())
+            throw new BusinessRuleException("El archivo no contiene hojas de cálculo.");
+
         var worksheet = workBook.Worksheet(1);
-        var rows = worksheet.RangeUsed().RowsUsed().Skip(1);
+        var usedRange = worksheet.RangeUsed();
+        if (usedRange is null)
+            throw new BusinessRuleException("El archivo no contiene datos.");
+
+        var rows = usedRange.RowsUsed().Skip(1);
 
         var rowsResult = new List<ExpenseImportRowResultDto>();
         var expenseToSave = new List<Expense>();
@@ -41,10 +65,10 @@ public class ExpenseImportService : IExpenseImportService
                 string paymentMethodName = row.Cell(5).GetValue<string>();
 
                 var category = await _categoryRepository.IsDuplicateNameAsync(userId,categoryName);
-                if (category is null) throw new ResourceNotFoundException($"Esta categoria no existe, {categoryName}");
+                if (category is null) throw new ResourceNotFoundException($"Esta categoría no existe, {categoryName}");
                 
                 var paymentMethod = await _paymentMethodRepository.IsDuplicatePaymentMethod(userId,paymentMethodName);
-                if (paymentMethod is null)  throw new ResourceNotFoundException($"Esta Este metodo de pago no existe, {paymentMethodName}");
+                if (paymentMethod is null)  throw new ResourceNotFoundException($"Este método de pago no existe, {paymentMethodName}");
                 
   
                 var expense = new Expense
