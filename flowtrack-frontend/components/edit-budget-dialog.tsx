@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ApiException } from "@/lib/api";
+import { ApiException, getErrorMessage } from "@/lib/api";
 import { BudgetUpdateDto } from "@/types/budget";
 
 interface EditBudgetDialogProps {
@@ -37,7 +37,11 @@ export function EditBudgetDialog({ budgetId, currentAmount, onUpdate }: EditBudg
       await onUpdate(budgetId, { amount: Number(formData.get("amount")) });
       setOpen(false);
     } catch (err) {
-      setError(err instanceof ApiException ? err.error.message : "No se pudo actualizar el presupuesto.");
+      setError(
+        err instanceof ApiException
+          ? getErrorMessage(err, "No se pudo actualizar el presupuesto.")
+          : "No se pudo actualizar el presupuesto."
+      );
     } finally {
       setIsLoading(false);
     }

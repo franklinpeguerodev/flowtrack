@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { apiFetch, ApiException } from "@/lib/api";
-import { CategoryResponseDto, CategoryCreateDto, CategoryUpdateDto } from "@/types/category";
+import { apiFetch, getErrorMessage } from "@/lib/api";
+import {
+  CategoryResponseDto,
+  CategoryCreateDto,
+  CategoryUpdateDto,
+} from "@/types/category";
 
 export function useCategories() {
   const [categories, setCategories] = useState<CategoryResponseDto[]>([]);
@@ -21,11 +25,7 @@ export function useCategories() {
         if (!cancelled) setCategories(data);
       } catch (err) {
         if (cancelled) return;
-        if (err instanceof ApiException) {
-          setError(err.error.message);
-        } else {
-          setError("No se pudieron cargar las categorías.");
-        }
+        setError(getErrorMessage(err, "No se pudieron cargar las categorías."));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -55,13 +55,23 @@ export function useCategories() {
     await apiFetch<void>(`/api/categories/${id}`, { method: "DELETE" });
     setCategories((prev) => prev.filter((c) => c.id !== id));
   }
-async function updateCategory(id: string, dto: CategoryUpdateDto) {
-  const updated = await apiFetch<CategoryResponseDto>(`/api/categories/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(dto),
-  });
-  setCategories((prev) => prev.map((c) => (c.id === id ? updated : c)));
-  return updated;
-}
-  return { categories, isLoading, error, createCategory, deleteCategory,updateCategory, refetch };
+
+  async function updateCategory(id: string, dto: CategoryUpdateDto) {
+    const updated = await apiFetch<CategoryResponseDto>(`/api/categories/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(dto),
+    });
+    setCategories((prev) => prev.map((c) => (c.id === id ? updated : c)));
+    return updated;
+  }
+
+  return {
+    categories,
+    isLoading,
+    error,
+    createCategory,
+    deleteCategory,
+    updateCategory,
+    refetch,
+  };
 }

@@ -52,7 +52,7 @@ export function ImportExpensesPanel() {
       <input
         ref={inputRef}
         type="file"
-        accept=".xlsx,.xls"
+        accept=".xlsx"
         className="hidden"
         onChange={handleFileChange}
       />

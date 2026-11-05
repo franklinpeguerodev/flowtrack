@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { apiFetch, ApiException } from "@/lib/api";
+import { apiFetch, getErrorMessage } from "@/lib/api";
 import { BudgetStatusDto } from "@/types/budget";
 
 export function useBudgetStatus(month?: number, year?: number) {
@@ -11,6 +11,7 @@ export function useBudgetStatus(month?: number, year?: number) {
 
   const [statuses, setStatuses] = useState<BudgetStatusDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [refetchIndex, setRefetchIndex] = useState(0);
 
   useEffect(() => {
@@ -18,15 +19,15 @@ export function useBudgetStatus(month?: number, year?: number) {
 
     async function load() {
       setIsLoading(true);
+      setError(null);
       try {
         const data = await apiFetch<BudgetStatusDto[]>(
           `/api/budgets/status?month=${targetMonth}&year=${targetYear}`
         );
         if (!cancelled) setStatuses(data);
       } catch (err) {
-        if (!cancelled && err instanceof ApiException) {
-          console.error(err.error.message);
-        }
+        if (cancelled) return;
+        setError(getErrorMessage(err, "No se pudieron cargar los presupuestos."));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -40,5 +41,5 @@ export function useBudgetStatus(month?: number, year?: number) {
 
   const refetch = useCallback(() => setRefetchIndex((prev) => prev + 1), []);
 
-  return { statuses, isLoading, refetch };
+  return { statuses, isLoading, error, month: targetMonth, year: targetYear, refetch };
 }

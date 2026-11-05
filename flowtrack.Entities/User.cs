@@ -8,6 +8,10 @@ public class User
     public string PasswordHash {get;set;} = string.Empty;      
     public DateTime CreatedAt {get;set;} = DateTime.UtcNow;   
 
+    // Versión de los tokens emitidos. El logout la incrementa y así invalida
+    // todos los JWT anteriores del usuario (revocación).
+    public int TokenVersion {get;set;}
+
     //propiedades de navegacion  
     public ICollection<Category>  Categories {get;} = [];
     public ICollection<Budget> Budgets {get;} = [];

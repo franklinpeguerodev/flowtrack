@@ -11,14 +11,22 @@ import { CategoryDetailDialog } from "@/components/category-detail-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CategoryResponseDto } from "@/types/category";
+import { getErrorMessage } from "@/lib/api";
 
 export default function DashboardPage() {
-  // 1. AÑADIDO: updateCategory extraído del hook
-  const { categories, isLoading, error, createCategory, deleteCategory, updateCategory } = useCategories();
+  const {
+    categories,
+    isLoading,
+    error,
+    createCategory,
+    deleteCategory,
+    updateCategory,
+  } = useCategories();
   const { expenses } = useExpenses();
   const { statuses } = useBudgetStatus();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<CategoryResponseDto | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const filtered = categories.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -27,6 +35,17 @@ export default function DashboardPage() {
   const selectedBudgetStatus = selectedCategory
     ? statuses.find((s) => s.categoryId === selectedCategory.id)
     : undefined;
+
+  async function handleDelete(id: string) {
+    setActionError(null);
+    try {
+      await deleteCategory(id);
+    } catch (err) {
+      setActionError(
+        getErrorMessage(err, "No se pudo eliminar la categoría.")
+      );
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -40,9 +59,19 @@ export default function DashboardPage() {
         <CreateCategoryDialog onCreate={createCategory} />
       </div>
 
-      {error && (
+      <div className="relative max-w-sm">
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar categoría..."
+          className="h-10 w-full rounded-lg border border-input bg-transparent px-3 text-sm"
+        />
+      </div>
+
+      {(error || actionError) && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{actionError ?? error}</AlertDescription>
         </Alert>
       )}
 
@@ -63,12 +92,15 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((category) => (
-            <div key={category.id} onClick={() => setSelectedCategory(category)} className="cursor-pointer">
-              {/* 2. AÑADIDO: onUpdate={updateCategory} pasado como prop */}
-              <CategoryCard 
-                category={category} 
-                onDelete={deleteCategory} 
-                onUpdate={updateCategory} 
+            <div
+              key={category.id}
+              onClick={() => setSelectedCategory(category)}
+              className="cursor-pointer"
+            >
+              <CategoryCard
+                category={category}
+                onDelete={handleDelete}
+                onUpdate={updateCategory}
               />
             </div>
           ))}

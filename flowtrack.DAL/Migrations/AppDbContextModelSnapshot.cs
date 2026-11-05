@@ -178,6 +178,11 @@ namespace flowtrack.DAL.Migrations
                         .HasColumnType("char(60)")
                         .IsFixedLength();
 
+                    b.Property<int>("TokenVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")

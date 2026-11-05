@@ -33,4 +33,7 @@ public class ExpenseRepository : Repository<Expense>, IExpenseRepository
             .Include(e => e.PaymentMethod)
             .Where(e => e.UserId == userId)
             .ToListAsync();
+
+    public async Task<bool> PaymentMethodExpenseExistingAsync(Guid paymentMethodId)
+        => await _dbSet.AnyAsync(e => e.PaymentMethodId == paymentMethodId);
 }

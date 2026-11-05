@@ -26,6 +26,9 @@ bld/
 ## Archivos de configuracion local que no deben compartirse (Seguridad)
 appsettings.Development.json
 appsettings.Local.json
+.env
+.env.*
+!.env.example
 
 ## Mac / VS Code
 .DS_Store

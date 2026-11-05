@@ -20,8 +20,13 @@ public class CategoryRepository : Repository<Category>, ICategoryRepository
         return expenses.Any();
     }
 
-    public async Task<Category?> IsDuplicateNameAsync(Guid userId,string name)
-    => await _dbSet.FirstOrDefaultAsync(c=> c.UserId == userId && c.Name ==name);
+    public async Task<Category?> IsDuplicateNameAsync(Guid userId,string name, Guid? excludeId = null)
+    {
+        var query = _dbSet.Where(c => c.UserId == userId && c.Name == name);
+        if (excludeId.HasValue)
+            query = query.Where(c => c.Id != excludeId.Value);
+        return await query.FirstOrDefaultAsync();
+    }
     
     public async Task<Category?> GetByIdAndUserAsync (Guid id, Guid userId)
     => await _dbSet.FirstOrDefaultAsync(c=> c.Id == id && c.UserId== userId );

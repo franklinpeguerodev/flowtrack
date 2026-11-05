@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { apiFetch, ApiException } from "@/lib/api";
+import { apiFetch, getErrorMessage } from "@/lib/api";
 import { ExpenseImportResultDto } from "@/types/file";
 
 export type ImportState = "idle" | "processing" | "error" | "done";
@@ -29,6 +29,13 @@ export function useImportExpenses() {
   async function upload() {
     if (!file) return;
 
+    // El backend solo lee .xlsx (ClosedXML no soporta el .xls binario).
+    if (!file.name.toLowerCase().endsWith(".xlsx")) {
+      setState("error");
+      setErrorMessage("El archivo debe ser un Excel con extensión .xlsx.");
+      return;
+    }
+
     setState("processing");
     setErrorMessage(null);
 
@@ -44,9 +51,7 @@ export function useImportExpenses() {
       setState("done");
     } catch (err) {
       setState("error");
-      setErrorMessage(
-        err instanceof ApiException ? err.error.message : "No se pudo importar el archivo."
-      );
+      setErrorMessage(getErrorMessage(err, "No se pudo importar el archivo."));
     }
   }
 

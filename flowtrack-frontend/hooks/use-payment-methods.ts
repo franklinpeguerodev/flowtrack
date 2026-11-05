@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { apiFetch, ApiException } from "@/lib/api";
-import { PaymentMethodResponseDto, PaymentMethodCreateDto, PaymentMethodUpdateDto } from "@/types/paymentMethod";
+import { apiFetch, getErrorMessage } from "@/lib/api";
+import {
+  PaymentMethodResponseDto,
+  PaymentMethodCreateDto,
+  PaymentMethodUpdateDto,
+} from "@/types/paymentMethod";
 
 export function usePaymentMethods() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethodResponseDto[]>([]);
@@ -21,7 +25,7 @@ export function usePaymentMethods() {
         if (!cancelled) setPaymentMethods(data);
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof ApiException ? err.error.message : "No se pudieron cargar los métodos de pago.");
+        setError(getErrorMessage(err, "No se pudieron cargar los métodos de pago."));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -48,13 +52,26 @@ export function usePaymentMethods() {
     await apiFetch<void>(`/api/paymentmethods/${id}`, { method: "DELETE" });
     setPaymentMethods((prev) => prev.filter((p) => p.id !== id));
   }
-async function updatePaymentMethod(id: string, dto: PaymentMethodUpdateDto) {
-  const updated = await apiFetch<PaymentMethodResponseDto>(`/api/paymentmethod/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(dto),
-  });
-  setPaymentMethods((prev) => prev.map((p) => (p.id === id ? updated : p)));
-  return updated;
-}
-  return { paymentMethods, isLoading, error, createPaymentMethod, deletePaymentMethod,updatePaymentMethod, refetch };
+
+  async function updatePaymentMethod(id: string, dto: PaymentMethodUpdateDto) {
+    const updated = await apiFetch<PaymentMethodResponseDto>(
+      `/api/paymentmethods/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(dto),
+      }
+    );
+    setPaymentMethods((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    return updated;
+  }
+
+  return {
+    paymentMethods,
+    isLoading,
+    error,
+    createPaymentMethod,
+    deletePaymentMethod,
+    updatePaymentMethod,
+    refetch,
+  };
 }

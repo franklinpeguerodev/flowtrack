@@ -14,18 +14,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Flowtrack-Gestion y analisis de gatos personales",
-  description: "Flowtrack-Gestion y analisis de gatos personales",
+  title: "Flowtrack — Gestión y análisis de gastos personales",
+  description:
+    "Flowtrack: registra tus gastos, controla presupuestos por categoría y exporta reportes mensuales.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className=""><AuthProvider>{children}</AuthProvider></body>
+      <body><AuthProvider>{children}</AuthProvider></body>
     </html>
   );
 }

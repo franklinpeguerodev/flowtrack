@@ -5,6 +5,8 @@ import { UpdateNameDto, ChangePasswordDto, UserProfileResponseDto } from "@/type
 
 export function useUserProfile() {
   async function updateName(dto: UpdateNameDto) {
+    // El backend devuelve { id, name, email }. El nombre mostrado en la UI se toma
+    // del valor enviado (no se depende de la respuesta) y se persiste en el contexto.
     return apiFetch<UserProfileResponseDto>("/api/userprofiles/name", {
       method: "PUT",
       body: JSON.stringify(dto),

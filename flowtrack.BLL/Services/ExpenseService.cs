@@ -42,7 +42,11 @@ public class ExpenseService : IExpenseService
         await _expenseRepository.CreateAsync(expense);
         await _expenseRepository.SaveChangesAsync();
 
-        return expense.ToDto();
+        // Se recarga la entidad con sus navegaciones (Category / PaymentMethod) para que
+        // el DTO devuelto incluya categoryName y paymentMethodName. Sin esto, la entidad
+        // recién creada no tiene navegaciones cargadas y esos campos salían vacíos.
+        var created = await _expenseRepository.GetByIdAndUserAsync(expense.Id, userId);
+        return created?.ToDto() ?? expense.ToDto();
     }
 
     public async Task<ExpenseResponseDto> UpdateAsync(Guid userId, Guid expenseId, ExpenseUpdateDto dto)
@@ -97,7 +101,7 @@ public class ExpenseService : IExpenseService
 
         var paymentMethod = await _paymentMethodRepository.GetByIdAndUserAsync(paymentMethodId, userId);
         if (paymentMethod is null)
-            throw new ResourceNotFoundException("El metodo de pago no existe.");
+            throw new ResourceNotFoundException("El método de pago no existe.");
     }
 
     private Task<Expense> GetOwnedExpenseOrThrow(Guid userId, Guid expenseId)

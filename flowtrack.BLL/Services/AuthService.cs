@@ -20,12 +20,16 @@ public class AuthService : IAuthService
 
        public async Task<AuthResponseDto> RegisterAsync(UserRegisterDto dto)
     {
-        if (await _userRepository.EmailxistingAsync(dto.Email))
+        // Se normaliza el email para que " X@Y.com " y "x@y.com" sean el mismo registro.
+        var email = dto.Email.Trim().ToLowerInvariant();
+        var name = dto.Name.Trim();
+
+        if (await _userRepository.EmailxistingAsync(email))
         throw new DuplicateResourceException("El email ya está registrado");
         var user = new User{
            Id= Guid.NewGuid(),
-           Name= dto.Name,
-           Email = dto.Email,
+           Name= name,
+           Email = email,
            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password)
         };
         await _userRepository.CreateAsync(user);
@@ -39,15 +43,29 @@ public class AuthService : IAuthService
     }
     public async Task<AuthResponseDto> LoginAsync(UserLoginDto dto)
     {
-       var user = await _userRepository.GetByEmailAsync(dto.Email);
+       var email = dto.Email.Trim().ToLowerInvariant();
+       var user = await _userRepository.GetByEmailAsync(email);
        if(user is null || !BCrypt.Net.BCrypt.Verify(dto.Password,user.PasswordHash))
-       throw new InvalidCredentialsException("Credenciales inavalidas");
+       throw new InvalidCredentialsException("Credenciales inválidas");
        return new AuthResponseDto
        {
            Token = _tokenGenerator.GenerateToken(user),
            Name= user.Name,
            Email = user.Email
        };
+    }
+
+    public async Task LogoutAsync(Guid userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user is null)
+            throw new ResourceNotFoundException("Usuario no encontrado.");
+
+        // Incrementar la versión invalida todos los JWT emitidos con la versión anterior
+        // (equivale a cerrar sesión en todos los dispositivos).
+        user.TokenVersion++;
+        await _userRepository.UpdateAsync(user);
+        await _userRepository.SaveChangesAsync();
     }
 
  

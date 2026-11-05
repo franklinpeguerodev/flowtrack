@@ -29,7 +29,14 @@ export function CategoryDetailDialog({
 }: CategoryDetailDialogProps) {
   if (!category) return null;
 
-  const categoryExpenses = expenses.filter((e) => e.categoryId === category.id);
+  // El presupuesto es mensual: los gastos asociados se limitan al mes actual
+  // para que el total coincida con lo que muestra el estado del presupuesto.
+  const now = new Date();
+  const categoryExpenses = expenses.filter((e) => {
+    if (e.categoryId !== category.id) return false;
+    const date = new Date(e.date);
+    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  });
   const totalSpent = categoryExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   return (
@@ -85,14 +92,14 @@ export function CategoryDetailDialog({
           <div className="mb-2 flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-sm font-medium">
               <Receipt className="size-4" />
-              Gastos asociados
+              Gastos del mes
             </span>
             <Badge variant="secondary">{categoryExpenses.length}</Badge>
           </div>
 
           {categoryExpenses.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">
-              No hay gastos registrados en esta categoría.
+              No hay gastos registrados en esta categoría este mes.
             </p>
           ) : (
             <div className="max-h-64 space-y-1 overflow-y-auto">

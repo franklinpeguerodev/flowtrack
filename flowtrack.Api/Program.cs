@@ -5,6 +5,10 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Archivo .env local (opcional). Tiene menor precedencia que las variables de entorno
+// del sistema y mayor que appsettings.json. Ver flowtrack.Api/.env.example.
+builder.Configuration.AddEnvFile();
+
 builder.Services.AddDataAccessLayer(builder.Configuration);
 builder.Services.AddBusinessLogicLayer();
 
@@ -25,7 +29,12 @@ if (app.Environment.IsDevelopment())
 }
 app.UseGlobalExceptionHandling();
 
-app.UseHttpsRedirection();
+// En desarrollo la API se sirve también por HTTP (http://localhost:5106) para no depender
+// del certificado de desarrollo. Fuera de desarrollo se mantiene la redirección a HTTPS.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors(CorsExtension.PolicyName);
 app.UseAuthorization();

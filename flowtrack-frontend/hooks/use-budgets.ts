@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { apiFetch, ApiException } from "@/lib/api";
+import { apiFetch, getErrorMessage } from "@/lib/api";
 import { BudgetResponseDto, BudgetCreateDto, BudgetUpdateDto } from "@/types/budget";
 
 export function useBudgets() {
@@ -21,7 +21,7 @@ export function useBudgets() {
         if (!cancelled) setBudgets(data);
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof ApiException ? err.error.message : "No se pudieron cargar los presupuestos.");
+        setError(getErrorMessage(err, "No se pudieron cargar los presupuestos."));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -48,13 +48,23 @@ export function useBudgets() {
     await apiFetch<void>(`/api/budgets/${id}`, { method: "DELETE" });
     setBudgets((prev) => prev.filter((b) => b.id !== id));
   }
-async function updateBudget(id: string, dto: BudgetUpdateDto) {
-  const updated = await apiFetch<BudgetResponseDto>(`/api/budgets/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(dto),
-  });
-  refetch();
-  return updated;
-}
-  return { budgets, isLoading, error, createBudget, deleteBudget,updateBudget, refetch };
+
+  async function updateBudget(id: string, dto: BudgetUpdateDto) {
+    const updated = await apiFetch<BudgetResponseDto>(`/api/budgets/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(dto),
+    });
+    refetch();
+    return updated;
+  }
+
+  return {
+    budgets,
+    isLoading,
+    error,
+    createBudget,
+    deleteBudget,
+    updateBudget,
+    refetch,
+  };
 }

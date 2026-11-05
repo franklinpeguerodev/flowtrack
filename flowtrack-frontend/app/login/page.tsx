@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { AlertCircle, Loader2, TrendingUp } from "lucide-react";
 
 import { useAuth } from "@/context/authContext";
-import { ApiException } from "@/lib/api";
+import { ApiException, getErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,8 +25,12 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const submitting = useRef(false);
 
   async function handleSubmit(formData: FormData) {
+    if (submitting.current) return;
+    submitting.current = true;
+
     setGeneralError(null);
     setFieldErrors({});
     setIsLoading(true);
@@ -39,10 +43,12 @@ export default function LoginPage() {
     } catch (err) {
       if (err instanceof ApiException) {
         if (err.error.errors) setFieldErrors(err.error.errors);
-        else setGeneralError(err.error.message);
+        else setGeneralError(getErrorMessage(err));
       } else {
         setGeneralError("Ocurrió un error inesperado. Intenta de nuevo.");
       }
+    } finally {
+      submitting.current = false;
       setIsLoading(false);
     }
   }

@@ -3,7 +3,16 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
-import { saveToken, getToken, clearToken, decodeToken, isTokenExpired } from "@/lib/auth";
+import {
+  saveToken,
+  getToken,
+  clearToken,
+  decodeToken,
+  isTokenExpired,
+  getStoredProfile,
+  saveProfile,
+  clearProfile,
+} from "@/lib/auth";
 import { AuthResponseDto, UserLoginDto, UserRegisterDto } from "@/types/auth";
 
 interface User {
@@ -17,7 +26,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (dto: UserLoginDto) => Promise<void>;
   register: (dto: UserRegisterDto) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (partial: Partial<User>) => void;
 }
 
@@ -30,11 +39,21 @@ function getInitialUser(): User | null {
 
   if (isTokenExpired(token)) {
     clearToken();
+    clearProfile();
     return null;
   }
 
   const decoded = decodeToken(token);
-  return decoded ? { name: decoded.name, email: decoded.email } : null;
+  if (!decoded) return null;
+
+  // El token identifica al usuario; el perfil local permite reflejar cambios
+  // (por ejemplo el nombre) sin endpoint de perfil ni refresh token.
+  const stored = getStoredProfile();
+
+  return {
+    name: stored?.name || decoded.name,
+    email: stored?.email || decoded.email,
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -42,7 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   function updateUser(partial: Partial<User>) {
-    setUser((prev) => (prev ? { ...prev, ...partial } : prev));
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...partial };
+      saveProfile({ name: next.name, email: next.email });
+      return next;
+    });
   }
 
   async function login(dto: UserLoginDto) {
@@ -52,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     saveToken(response.token);
+    saveProfile({ name: response.name, email: response.email });
     setUser({ name: response.name, email: response.email });
     router.push("/dashboard");
   }
@@ -63,14 +88,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     saveToken(response.token);
+    saveProfile({ name: response.name, email: response.email });
     setUser({ name: response.name, email: response.email });
     router.push("/dashboard");
   }
 
-  function logout() {
-    clearToken();
-    setUser(null);
-    router.push("/login");
+  async function logout() {
+    try {
+      // Invalida el token en el backend (incrementa token_version).
+      await apiFetch<void>("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Si el token ya expiró o la API no responde, se limpia la sesión local igual.
+    } finally {
+      clearToken();
+      clearProfile();
+      setUser(null);
+      router.push("/login");
+    }
   }
 
   return (
