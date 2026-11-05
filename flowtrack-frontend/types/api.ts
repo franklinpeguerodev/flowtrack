@@ -1,3 +1,4 @@
+// Literales que emite el backend (flowtrack.BLL.Exceptions).
 export type ErrorType =
   | "DUPLICATE_RESOURCE"
   | "RESOURCE_NOT_FOUND"
