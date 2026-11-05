@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ApiException } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api";
 import { PaymentMethodResponseDto, PaymentMethodUpdateDto } from "@/types/paymentMethod";
 
 interface EditPaymentMethodDialogProps {
@@ -41,7 +41,7 @@ export function EditPaymentMethodDialog({ paymentMethod, onUpdate }: EditPayment
       });
       setOpen(false);
     } catch (err) {
-      setError(err instanceof ApiException ? err.error.message : "No se pudo actualizar el método de pago.");
+      setError(getErrorMessage(err, "No se pudo actualizar el método de pago."));
     } finally {
       setIsLoading(false);
     }

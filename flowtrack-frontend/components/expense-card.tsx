@@ -31,13 +31,15 @@ export function ExpenseCard({ expense, onDelete, onUpdate }: ExpenseCardProps) {
             <p className="truncate text-sm text-muted-foreground">
               {expense.description || "Sin descripción"}
             </p>
-            <p className="text-xs text-muted-foreground">Fecha: {formattedDate}</p>
+            <p className="text-xs text-muted-foreground">
+              {expense.paymentMethodName} · {formattedDate}
+            </p>
           </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-4">
           <span className="font-semibold">${expense.amount.toFixed(2)}</span>
-          
+
           <div className="flex items-center gap-1">
             <EditExpenseDialog expense={expense} onUpdate={onUpdate} />
             <Button

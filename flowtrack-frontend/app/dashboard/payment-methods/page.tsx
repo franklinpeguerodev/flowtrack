@@ -6,16 +6,42 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { usePaymentMethods } from "@/hooks/use-payment-methods";
+import { useExpenses } from "@/hooks/use-expenses";
 import { PaymentMethodCard } from "@/components/payment-method-card";
 import { CreatePaymentMethodDialog } from "@/components/create-payment-method-dialog";
+import { getErrorMessage } from "@/lib/api";
 
 export default function PaymentMethodsPage() {
-  const { paymentMethods, isLoading, error, createPaymentMethod, deletePaymentMethod } = usePaymentMethods();
+  const {
+    paymentMethods,
+    isLoading,
+    error,
+    createPaymentMethod,
+    updatePaymentMethod,
+    deletePaymentMethod,
+  } = usePaymentMethods();
+  const { expenses } = useExpenses();
   const [search, setSearch] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const filtered = paymentMethods.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  function expenseCount(paymentMethodId: string) {
+    return expenses.filter((e) => e.paymentMethodId === paymentMethodId).length;
+  }
+
+  async function handleDelete(id: string) {
+    setActionError(null);
+    try {
+      await deletePaymentMethod(id);
+    } catch (err) {
+      setActionError(
+        getErrorMessage(err, "No se pudo eliminar el método de pago.")
+      );
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -29,9 +55,9 @@ export default function PaymentMethodsPage() {
         <CreatePaymentMethodDialog onCreate={createPaymentMethod} />
       </div>
 
-      {error && (
+      {(error || actionError) && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{actionError ?? error}</AlertDescription>
         </Alert>
       )}
 
@@ -53,7 +79,7 @@ export default function PaymentMethodsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed py-16 text-center">
-          <WalletCards   className="size-8 text-muted-foreground" />
+          <WalletCards className="size-8 text-muted-foreground" />
           <p className="font-medium">Aún no tienes métodos de pago</p>
           <p className="text-sm text-muted-foreground">
             Crea tu primer método para empezar a registrar gastos.
@@ -65,7 +91,9 @@ export default function PaymentMethodsPage() {
             <PaymentMethodCard
               key={paymentMethod.id}
               paymentMethod={paymentMethod}
-              onDelete={deletePaymentMethod}
+              expenseCount={expenseCount(paymentMethod.id)}
+              onDelete={handleDelete}
+              onUpdate={updatePaymentMethod}
             />
           ))}
         </div>

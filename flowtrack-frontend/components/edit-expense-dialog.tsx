@@ -22,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ApiException } from "@/lib/api";
+import { getErrorMessage } from "@/lib/api";
 import { ExpenseResponseDto, ExpenseUpdateDto } from "@/types/expense";
 import { useCategories } from "@/hooks/use-categories";
 import { usePaymentMethods } from "@/hooks/use-payment-methods";
@@ -30,6 +30,12 @@ import { usePaymentMethods } from "@/hooks/use-payment-methods";
 interface EditExpenseDialogProps {
   expense: ExpenseResponseDto;
   onUpdate: (id: string, dto: ExpenseUpdateDto) => Promise<unknown>;
+}
+
+function todayLocal(): string {
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  return new Date(now.getTime() - offset * 60_000).toISOString().slice(0, 10);
 }
 
 export function EditExpenseDialog({ expense, onUpdate }: EditExpenseDialogProps) {
@@ -41,8 +47,18 @@ export function EditExpenseDialog({ expense, onUpdate }: EditExpenseDialogProps)
 
   const { categories = [] } = useCategories();
   const { paymentMethods = [] } = usePaymentMethods();
-  const selectedCategory = categories.find((c) => c.id === categoryId);
-  const selectedPaymentMethod = paymentMethods.find((p) => p.id === paymentMethodId);
+
+  // Se ofrecen los activos, pero se conserva la selección actual aunque esté inactiva
+  // (si no, el select no podría mostrar el valor guardado).
+  const availableCategories = categories.filter(
+    (c) => c.isActive || c.id === expense.categoryId
+  );
+  const availablePaymentMethods = paymentMethods.filter(
+    (p) => p.isActive || p.id === expense.paymentMethodId
+  );
+
+  const selectedCategory = availableCategories.find((c) => c.id === categoryId);
+  const selectedPaymentMethod = availablePaymentMethods.find((p) => p.id === paymentMethodId);
 
   async function handleSubmit(formData: FormData) {
     setError(null);
@@ -58,7 +74,7 @@ export function EditExpenseDialog({ expense, onUpdate }: EditExpenseDialogProps)
       });
       setOpen(false);
     } catch (err) {
-      setError(err instanceof ApiException ? err.error.message : "No se pudo actualizar el gasto.");
+      setError(getErrorMessage(err, "No se pudo actualizar el gasto."));
     } finally {
       setIsLoading(false);
     }
@@ -117,6 +133,7 @@ export function EditExpenseDialog({ expense, onUpdate }: EditExpenseDialogProps)
               name="date"
               type="date"
               defaultValue={expense.date.slice(0, 10)}
+              max={todayLocal()}
               required
             />
           </div>
@@ -130,8 +147,10 @@ export function EditExpenseDialog({ expense, onUpdate }: EditExpenseDialogProps)
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                {availableCategories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}{c.isActive ? "" : " (inactiva)"}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -146,8 +165,10 @@ export function EditExpenseDialog({ expense, onUpdate }: EditExpenseDialogProps)
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {paymentMethods.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                {availablePaymentMethods.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}{p.isActive ? "" : " (inactivo)"}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

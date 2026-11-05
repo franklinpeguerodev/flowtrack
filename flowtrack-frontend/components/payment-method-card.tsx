@@ -9,11 +9,19 @@ import { EditPaymentMethodDialog } from "@/components/edit-payment-method-dialog
 
 interface PaymentMethodCardProps {
   paymentMethod: PaymentMethodResponseDto;
+  expenseCount?: number;
   onDelete: (id: string) => void;
   onUpdate: (id: string, dto: PaymentMethodUpdateDto) => Promise<unknown>;
 }
 
-export function PaymentMethodCard({ paymentMethod, onDelete, onUpdate }: PaymentMethodCardProps) {
+export function PaymentMethodCard({
+  paymentMethod,
+  expenseCount = 0,
+  onDelete,
+  onUpdate,
+}: PaymentMethodCardProps) {
+  const hasExpenses = expenseCount > 0;
+
   return (
     <Card className="transition-shadow hover:shadow-md">
       <CardContent className="flex items-center justify-between">
@@ -23,9 +31,17 @@ export function PaymentMethodCard({ paymentMethod, onDelete, onUpdate }: Payment
           </div>
           <div>
             <p className="font-medium">{paymentMethod.name}</p>
-            <Badge variant={paymentMethod.isActive ? "default" : "secondary"} className="mt-1">
-              {paymentMethod.isActive ? "Activo" : "Inactivo"}
-            </Badge>
+            <div className="mt-1 flex items-center gap-2">
+              <Badge variant={paymentMethod.isActive ? "default" : "secondary"}>
+                {paymentMethod.isActive ? "Activo" : "Inactivo"}
+              </Badge>
+              {hasExpenses && (
+                <span className="text-xs text-muted-foreground">
+                  {expenseCount} gasto{expenseCount === 1 ? "" : "s"} asociado
+                  {expenseCount === 1 ? "" : "s"}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -34,6 +50,12 @@ export function PaymentMethodCard({ paymentMethod, onDelete, onUpdate }: Payment
           <Button
             variant="ghost"
             size="icon-sm"
+            disabled={hasExpenses}
+            title={
+              hasExpenses
+                ? "No se puede eliminar: tiene gastos asociados"
+                : "Eliminar método de pago"
+            }
             onClick={(e) => {
               e.stopPropagation();
               onDelete(paymentMethod.id);
