@@ -14,17 +14,17 @@ public class UserService : IUserService
     {
         _userRepository=userRepository;
     }
-    public async Task<UserProfileReponseDto> UpdateNameAsync(Guid userId, UserUpdateNameDto dto)
+    public async Task<UserProfileResponseDto> UpdateNameAsync(Guid userId, UserUpdateNameDto dto)
     {
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user is null) throw new ResourceNotFoundException ("Este usaurio no existe");
+        if (user is null) throw new ResourceNotFoundException ("Este usuario no existe");
         
         user.Name = dto.Name;
         await _userRepository.UpdateAsync(user);
         await _userRepository.SaveChangesAsync();
         
         
-     return new UserProfileReponseDto
+     return new UserProfileResponseDto
      {
          Id=user.Id,
          Name=user.Name,
@@ -36,7 +36,8 @@ public class UserService : IUserService
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user is null) throw new ResourceNotFoundException ("Usuario no encontrado.");
-        if (!BCrypt.Net.BCrypt.Verify(dto.NewPassword,user.PasswordHash)) throw new InvalidCredentialsException ("La contrasena actual es incorrecta.");
+        if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword,user.PasswordHash))
+            throw new InvalidCredentialsException ("La contraseña actual es incorrecta.");
         user.PasswordHash= BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
         await _userRepository.UpdateAsync(user);
         await _userRepository.SaveChangesAsync();

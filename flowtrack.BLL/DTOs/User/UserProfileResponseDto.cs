@@ -1,9 +1,8 @@
-using System.Dynamic;
-
 namespace flowtrack.BLL.DTOs.User;
- public record UserProfileReponseDto
+
+public record UserProfileResponseDto
 {
-    public Guid Id {get;init;}
-    public string Name = string.Empty;
-    public String Email=string.Empty;
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
 }
